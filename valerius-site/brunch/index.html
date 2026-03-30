@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Brunch | Valerius</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: #0b0f19;
+    color: #e2e8f0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .card {
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 16px;
+    padding: 48px;
+    max-width: 480px;
+    width: 90%;
+    text-align: center;
+  }
+  .logo { font-size: 48px; margin-bottom: 16px; }
+  h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .sub { color: #9ca3af; font-size: 14px; margin-bottom: 32px; line-height: 1.6; }
+  .status {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 20px; border-radius: 24px;
+    font-size: 13px; font-weight: 500;
+    margin-bottom: 24px;
+  }
+  .status.online { background: rgba(34,197,94,0.12); color: #22c55e; }
+  .status.offline { background: rgba(239,68,68,0.12); color: #ef4444; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  .status.online .dot { background: #22c55e; animation: pulse 2s infinite; }
+  .status.offline .dot { background: #ef4444; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .url-box {
+    background: #1f2937;
+    border: 1px solid #374151;
+    border-radius: 8px;
+    padding: 14px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #8b5cf6;
+    word-break: break-all;
+    margin-bottom: 16px;
+  }
+  a.btn {
+    display: inline-block;
+    padding: 12px 32px;
+    background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: opacity .2s;
+  }
+  a.btn:hover { opacity: 0.9; }
+  .help {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.8;
+  }
+  .back { margin-top: 24px; }
+  .back a { color: #6b7280; text-decoration: none; font-size: 13px; }
+  .back a:hover { color: #9ca3af; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="logo">B</div>
+  <h1>Brunch</h1>
+  <p class="sub">Plataforma de gestao Valerius Assessoria.<br>Acesse o painel pelo link abaixo.</p>
+
+  <div id="statusBadge" class="status offline">
+    <div class="dot"></div>
+    <span id="statusText">Verificando...</span>
+  </div>
+
+  <div class="url-box" id="tunnelUrl">Carregando...</div>
+
+  <a class="btn" id="accessBtn" href="#" style="pointer-events:none;opacity:0.5">Acessar Brunch</a>
+
+  <div class="help">
+    Se o servidor estiver offline, execute<br>
+    <strong>iniciar_brunch_online.bat</strong> no computador principal.
+  </div>
+
+  <div class="back">
+    <a href="/">&larr; Voltar para valerius.com.br</a>
+  </div>
+</div>
+
+<script>
+// The tunnel URL is stored in a simple text file that gets updated
+// For now, try to load from localStorage or show instructions
+const TUNNEL_CONFIG_URL = 'tunnel.txt';
+
+async function checkTunnel() {
+  const badge = document.getElementById('statusBadge');
+  const text = document.getElementById('statusText');
+  const urlBox = document.getElementById('tunnelUrl');
+  const btn = document.getElementById('accessBtn');
+
+  // Try to load tunnel URL from tunnel.txt
+  try {
+    const resp = await fetch(TUNNEL_CONFIG_URL);
+    if (resp.ok) {
+      const url = (await resp.text()).trim();
+      if (url && url.startsWith('http')) {
+        urlBox.textContent = url;
+        btn.href = url;
+
+        // Check if tunnel is alive
+        try {
+          const check = await fetch(url + '/api/auth/me', {mode:'no-cors'});
+          badge.className = 'status online';
+          text.textContent = 'Servidor online';
+          btn.style.pointerEvents = 'auto';
+          btn.style.opacity = '1';
+        } catch(e) {
+          // no-cors won't give us status, but if fetch succeeds the server exists
+          badge.className = 'status online';
+          text.textContent = 'Servidor disponivel';
+          btn.style.pointerEvents = 'auto';
+          btn.style.opacity = '1';
+        }
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // No tunnel.txt found
+  badge.className = 'status offline';
+  text.textContent = 'URL nao configurada';
+  urlBox.textContent = 'Execute iniciar_brunch_online.bat e atualize tunnel.txt';
+}
+
+checkTunnel();
+</script>
+</body>
+</html>
