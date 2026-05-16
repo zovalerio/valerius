@@ -1,2 +1,17 @@
 [build]
   publish = "."
+
+# valerius.com.br/vallora → app Vallora (deploy separado em vallora-acr).
+# Proxy (status 200, force): a URL continua valerius.com.br/vallora; o site
+# institucional (homepage) fica intacto. Substitui o antigo caminho /brunch.
+[[redirects]]
+  from = "/vallora"
+  to = "https://vallora-acr.netlify.app/vallora"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/vallora/*"
+  to = "https://vallora-acr.netlify.app/vallora/:splat"
+  status = 200
+  force = true
